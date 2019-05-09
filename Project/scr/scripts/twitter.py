@@ -6,9 +6,10 @@ from vectorizer import Vectorizer
 
 if __name__ == "__main__":
 
-    preprocessor = Preprocessor('../test.tsv', Cruncher())
+    #preprocessor = Preprocessor('../../twitter_data/train2017.tsv', Cruncher())
+    preprocessor = Preprocessor('test.tsv', Cruncher())
+    visualization = Visualizer(preprocessor).visualize(labels = ['positive'])
 
-    visualization = Visualizer(preprocessor).visualize()
-
-    model = Vectorizer(preprocessor).vectorize()
-
+    model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
+    
+    Visualizer(preprocessor).tsne(model)
