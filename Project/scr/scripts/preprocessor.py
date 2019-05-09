@@ -7,12 +7,16 @@ import string
 from nltk import word_tokenize
 from nltk.corpus import stopwords
 
+from util import platform
+
 class Preprocessor:
 
     urlregex = r'''(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))'''
     tagregex = r'''@[^\s]+'''
 
     def __init__(self, filename, cruncher, save=True):
+
+        filename = platform.path(filename)
 
         if not os.path.isdir('out'):
             os.mkdir('out')
