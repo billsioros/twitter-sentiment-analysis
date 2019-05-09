@@ -1,5 +1,6 @@
 
 import os
+import sys
 import re
 import string
 
@@ -13,7 +14,12 @@ class Preprocessor:
 
     def __init__(self, filename, cruncher, save=True):
 
+        if not os.path.isdir('out'):
+            os.mkdir('out')
+
         self.filename, _ = os.path.splitext(os.path.basename(filename))
+
+        self.filename = os.path.join(os.path.curdir, 'out', self.filename)
 
         self.tweets = {
             'positive': [],
@@ -60,12 +66,16 @@ class Preprocessor:
                     else:
                         raise ValueError("'" + tokens[2] + "' is not a valid label")
 
+                print('<LOG>: Saving processed data', file=sys.stderr)
+
                 if save:
                     for label in self.tweets.keys():
                         with open(self.filename + '_' + label + '.tsv', 'w', encoding='ascii') as file:
                             file.write('\n'.join([label + '\t' + ' '.join(tweet) for tweet in self.tweets[label]]))
 
                 return
+
+        print('<LOG>: Loading processed data', file=sys.stderr)
 
         for label in self.tweets.keys():
             with open(self.filename + '_' + label + '.tsv', mode='r', encoding='ascii') as file:

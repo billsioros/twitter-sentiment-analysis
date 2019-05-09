@@ -1,2 +1,2 @@
 
-rm -iv *.pkl *.tsv
+rm -rf out
