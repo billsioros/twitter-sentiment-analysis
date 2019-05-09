@@ -1,4 +1,5 @@
 
+import sys
 import os
 
 import pickle
@@ -85,14 +86,18 @@ class Vectorizer:
 
     def vectorize(self, labels=['positive', 'negative', 'neutral'], save=True):
 
-        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in set(labels)]) + '.pkl'
+        labels = sorted(set(labels))
+
+        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in labels]) + '.pkl'
 
         if os.path.isfile(filename):
+            print('<LOG>: Loading model from', filename, file=sys.stderr)
+
             return self.load(filename)
 
         data = []
 
-        for label in set(labels):
+        for label in labels:
             if label not in self.preprocessor.tweets.keys():
                 raise ValueError("'" + label + "' is not a valid label")
             else:
@@ -101,6 +106,8 @@ class Vectorizer:
         model = self.process(data)
 
         if save:
+            print('<LOG>: Saving model to', filename, file=sys.stderr)
+
             self.save(model, filename)
 
         return model

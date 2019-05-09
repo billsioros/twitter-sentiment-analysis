@@ -1,5 +1,6 @@
 
 import os
+import sys
 import re
 import string
 
@@ -65,12 +66,16 @@ class Preprocessor:
                     else:
                         raise ValueError("'" + tokens[2] + "' is not a valid label")
 
+                print('<LOG>: Saving processed data', file=sys.stderr)
+
                 if save:
                     for label in self.tweets.keys():
                         with open(self.filename + '_' + label + '.tsv', 'w', encoding='ascii') as file:
                             file.write('\n'.join([label + '\t' + ' '.join(tweet) for tweet in self.tweets[label]]))
 
                 return
+
+        print('<LOG>: Loading processed data', file=sys.stderr)
 
         for label in self.tweets.keys():
             with open(self.filename + '_' + label + '.tsv', mode='r', encoding='ascii') as file:
