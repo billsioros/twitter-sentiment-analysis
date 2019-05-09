@@ -1,12 +1,15 @@
 
 import sys
 import os
+import re
 
 import pickle
 
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
+
+import numpy
 
 class Vectorizer:
 
@@ -25,7 +28,7 @@ class Vectorizer:
     }
 
     w2vargs = {
-        "size" : 50,
+        "size" : 100,
         "window" : 5,
         "min_count" : 2,
         "sg" : 1,
@@ -35,80 +38,79 @@ class Vectorizer:
         "seed" : 34
     }
 
+
     def __init__(self, preprocessor, method='word_embeddings'):
 
         self.preprocessor = preprocessor
 
-        self.method = method
+        self.method = re.sub(r'''-|\ ''', '_', method)
 
-        if method == 'word_embeddings':
+        if self.method == 'word_embeddings':
             self.underlying = Word2Vec(**self.w2vargs)
-
-            def process(data):
-                self.underlying.build_vocab(data)
-                
-                self.underlying.train(sentences=data, total_examples=len(data), epochs=20)
-
-                return self.underlying
-
-            self.process = lambda data: process(data)
-
-            self.load = Word2Vec.load
-
-            self.save = lambda model, filename: model.save(filename)
-
-            self.transform = lambda data: data
-
-            return
-
-        elif method == 'bag_of_words':
+        elif self.method == 'bag_of_words':
             self.underlying = CountVectorizer(**self.bowargs)
-        elif method == 'tf_idf':
+        elif self.method == 'tf_idf':
             self.underlying = TfidfVectorizer(**self.tfidfargs)
         else:
-            raise ValueError("'" + method + "' is not supported")
+            raise ValueError("'" + self.method + "' is not supported")
 
-        self.process = self.underlying.fit_transform
-
-        def load(filename):
-            with open(filename, 'rb') as file:
-                return pickle.load(file)
-
-        self.load = load
-
-        def save(data, filename):
-            with open(filename, 'wb') as file:
-                pickle.dump(data, file)
-
-        self.save = save
-
-        self.transform = lambda data: [' '.join(array) for array in data]
 
     def vectorize(self, labels=['positive', 'negative', 'neutral'], save=True):
 
         labels = sorted(set(labels))
 
-        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in labels]) + '.pkl'
-
-        if os.path.isfile(filename):
-            print('<LOG>: Loading model from', filename, file=sys.stderr)
-
-            return self.load(filename)
-
-        data = []
-
         for label in labels:
             if label not in self.preprocessor.tweets.keys():
                 raise ValueError("'" + label + "' is not a valid label")
-            else:
-                data += self.transform(self.preprocessor.tweets[label])
 
-        model = self.process(data)
+        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in labels]) + '.pkl'
 
-        if save:
-            print('<LOG>: Saving model to', filename, file=sys.stderr)
+        if os.path.isfile(filename):
+            print('<LOG>: Loading vectors from', filename, file=sys.stderr)
 
-            self.save(model, filename)
+            with open(filename, 'rb') as file:
+                return pickle.load(file)
 
-        return model
+        return self.process(labels, filename if save else None)
+
+
+    def process(self, labels, filename):
+        
+        tweets = []
+
+        for label in labels:
+            tweets += self.preprocessor.tweets[label]
+
+        if self.method == 'word_embeddings':
+
+            self.underlying.build_vocab(tweets)
+
+            self.underlying.train(sentences=tweets, total_examples=len(tweets), epochs=20)
+
+            vectors = []
+
+            for tweet in tweets:
+                vector = []
+
+                for token in tweet:
+                    if token in self.underlying.wv:
+                        vector.append(self.underlying.wv[token])
+                    else:
+                        vector.append(2 * numpy.random.randn(100) - 1)
+
+                vectors.append(numpy.mean(vector))
+                
+        else:
+
+            tweets = [' '.join(tweet) for tweet in tweets]
+
+            vectors = self.underlying.fit_transform(tweets).toarray()
+
+        if filename:
+            with open(filename, 'wb') as file:
+                print('<LOG>: Saving vectors to', filename, file=sys.stderr)
+
+                pickle.dump(vectors, file)
+
+        return vectors
 

@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     preprocessor = Preprocessor('../test.tsv', Cruncher())
 
-    visualization = Visualizer(preprocessor).visualize()
+    # visualization = Visualizer(preprocessor).visualize()
 
-    model = Vectorizer(preprocessor).vectorize()
+    vectors = Vectorizer(preprocessor).vectorize()
 
