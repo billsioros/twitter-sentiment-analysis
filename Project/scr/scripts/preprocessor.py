@@ -13,7 +13,12 @@ class Preprocessor:
 
     def __init__(self, filename, cruncher, save=True):
 
+        if not os.path.isdir('out'):
+            os.mkdir('out')
+
         self.filename, _ = os.path.splitext(os.path.basename(filename))
+
+        self.filename = os.path.join(os.path.curdir, 'out', self.filename)
 
         self.tweets = {
             'positive': [],
