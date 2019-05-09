@@ -39,13 +39,13 @@ class Vectorizer:
     }
 
 
-    def __init__(self, preprocessor, method='word_embeddings'):
+    def __init__(self, preprocessor, method='word_2_vec'):
 
         self.preprocessor = preprocessor
 
         self.method = re.sub(r'''-|\ ''', '_', method)
 
-        if self.method == 'word_embeddings':
+        if self.method == 'word_2_vec':
             self.underlying = Word2Vec(**self.w2vargs)
         elif self.method == 'bag_of_words':
             self.underlying = CountVectorizer(**self.bowargs)
@@ -55,15 +55,9 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, labels=['positive', 'negative', 'neutral'], save=True):
+    def vectorize(self, save=True):
 
-        labels = sorted(set(labels))
-
-        for label in labels:
-            if label not in self.preprocessor.tweets.keys():
-                raise ValueError("'" + label + "' is not a valid label")
-
-        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in labels]) + '.pkl'
+        filename = '_'.join([self.preprocessor.filename, self.method]) + '.pkl'
 
         if os.path.isfile(filename):
             print('<LOG>: Loading vectors from', filename, file=sys.stderr)
@@ -71,17 +65,14 @@ class Vectorizer:
             with open(filename, 'rb') as file:
                 return pickle.load(file)
 
-        return self.process(labels, filename if save else None)
+        return self.process(filename if save else None)
 
 
-    def process(self, labels, filename):
+    def process(self, filename):
         
-        tweets = []
+        tweets = self.preprocessor.tweets
 
-        for label in labels:
-            tweets += self.preprocessor.tweets[label]
-
-        if self.method == 'word_embeddings':
+        if self.method == 'word_2_vec':
 
             self.underlying.build_vocab(tweets)
 
