@@ -33,7 +33,7 @@ class Visualizer:
 
     @staticmethod
     def frame(tokens):
-        
+
         count = Counter(tokens)
 
         dataFrame = pd.DataFrame(data=count.most_common(50), columns=['Word', 'Count'])
@@ -61,7 +61,7 @@ class Visualizer:
 
     @staticmethod
     def tsne(model):
-        from itertools import islice
+
         labels = []
         tokens = []
         counter = 0
@@ -94,3 +94,18 @@ class Visualizer:
                 va='bottom')
         plt.show()
 
+    @staticmethod
+    def heatMap(model):
+        labels = []
+        tokens = []
+        counter = 0
+
+        for word in model.wv.vocab:
+            tokens.append(model[word])
+            labels.append(word)
+            counter +=1
+            if counter == 100:
+                break
+        
+
+        
