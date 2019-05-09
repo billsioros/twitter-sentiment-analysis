@@ -1,0 +1,2 @@
+
+rm -iv *.pkl *.tsv
