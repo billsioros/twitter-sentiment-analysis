@@ -37,8 +37,8 @@ class Visualizer:
         count = Counter(tokens)
 
         dataFrame = pd.DataFrame(data=count.most_common(50), columns=['Word', 'Count'])
-
-        print(dataFrame)
+        
+        dataFrame.plot.bar(x='Word',y='Count',figsize = (20,10) )
 
         return dataFrame
 
@@ -94,18 +94,5 @@ class Visualizer:
                 va='bottom')
         plt.show()
 
-    @staticmethod
-    def heatMap(model):
-        labels = []
-        tokens = []
-        counter = 0
-
-        for word in model.wv.vocab:
-            tokens.append(model[word])
-            labels.append(word)
-            counter +=1
-            if counter == 100:
-                break
-        
 
         
