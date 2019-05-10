@@ -11,10 +11,14 @@ from gensim.models import Word2Vec
 
 import numpy
 
+from dictionary import Dictioanry
+
 class Vectorizer:
 
+    vector_size = 200
+
     bowargs = {
-        "max_features": 200,
+        "max_features": vector_size,
         "stop_words" : 'english',
         "max_df" : 0.5,
         "min_df" : 0.01
@@ -23,12 +27,12 @@ class Vectorizer:
     tfidfargs = {
         "max_df" : 1.0,
         "min_df" : 1,
-        "max_features" : 1000,
+        "max_features" : vector_size,
         "stop_words" : 'english'
     }
 
     w2vargs = {
-        "size" : 100,
+        "size" : vector_size,
         "window" : 5,
         "min_count" : 2,
         "sg" : 1,
@@ -39,40 +43,51 @@ class Vectorizer:
     }
 
 
-    def __init__(self, preprocessor, method='word_2_vec'):
+    def __init__(self, method='word2vec'):
 
-        self.preprocessor = preprocessor
+        self.method = re.sub(r'''_|-|\ ''', '', method)
 
-        self.method = re.sub(r'''-|\ ''', '_', method)
-
-        if self.method == 'word_2_vec':
+        if self.method == 'word2vec':
             self.underlying = Word2Vec(**self.w2vargs)
-        elif self.method == 'bag_of_words':
+        elif self.method == 'bagofwords':
             self.underlying = CountVectorizer(**self.bowargs)
-        elif self.method == 'tf_idf':
+        elif self.method == 'tfidf':
             self.underlying = TfidfVectorizer(**self.tfidfargs)
         else:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, save=True):
+    def vectorize(self, preprocessor, dictionary_root='..\\..\\lexica', save=True):
 
-        filename = '_'.join([self.preprocessor.filename, self.method]) + '.pkl'
+        filename = '_'.join([preprocessor.filename, self.method]) + '.pkl'
 
         if os.path.isfile(filename):
-            print('<LOG>: Loading vectors from', filename, file=sys.stderr)
 
             with open(filename, 'rb') as file:
-                return pickle.load(file)
+                vectors = pickle.load(file)
 
-        return self.process(filename if save else None)
+                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+
+                return vectors
+
+        return self.process(preprocessor, Dictioanry(dictionary_root), filename if save else None)
 
 
-    def process(self, filename):
-        
-        tweets = self.preprocessor.tweets
+    def process(self, preprocessor, dictionary, filename):
 
-        if self.method == 'word_2_vec':
+        tweets = []
+        for label in preprocessor.tweets.keys():
+            tweets += preprocessor.tweets[label]
+
+        valences = [[0.0] * len(dictionary.fullpaths)] * len(tweets)
+
+        for i, tweet in enumerate(tweets):
+            for token in tweet:
+                for j in range(len(dictionary.fullpaths)):
+                    if token in dictionary.valences:
+                        valences[i][j] += dictionary.valences[token][j] / len(tweet)
+
+        if self.method == 'word2vec':
 
             self.underlying.build_vocab(tweets)
 
@@ -80,26 +95,33 @@ class Vectorizer:
 
             vectors = []
 
-            for tweet in tweets:
+            for i, tweet in enumerate(tweets):
                 vector = []
 
                 for token in tweet:
                     if token in self.underlying.wv:
                         vector.append(self.underlying.wv[token])
                     else:
-                        vector.append(2 * numpy.random.randn(100) - 1)
+                        vector.append(2.0 * numpy.random.randn(self.vector_size) - 1.0)
 
-                vectors.append(numpy.mean(vector))
-                
+                vector  = numpy.mean(vector, axis=0)
+                valence = numpy.asarray(valences[i])
+
+                vectors.append(numpy.concatenate((vector, valence)))
+
         else:
 
             tweets = [' '.join(tweet) for tweet in tweets]
 
-            vectors = self.underlying.fit_transform(tweets).toarray()
+            vectors = [None] * len(tweets)
+
+            for i, vector in enumerate(self.underlying.fit_transform(tweets).toarray()):
+                vectors[i] = numpy.concatenate((vector, numpy.asarray(valences[i])))
 
         if filename:
             with open(filename, 'wb') as file:
-                print('<LOG>: Saving vectors to', filename, file=sys.stderr)
+
+                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
 
                 pickle.dump(vectors, file)
 

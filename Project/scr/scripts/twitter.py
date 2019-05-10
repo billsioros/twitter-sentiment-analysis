@@ -10,5 +10,5 @@ if __name__ == "__main__":
 
     # visualization = Visualizer(preprocessor).visualize()
 
-    vectors = Vectorizer(preprocessor).vectorize()
+    vectors = Vectorizer().vectorize(preprocessor)
 
