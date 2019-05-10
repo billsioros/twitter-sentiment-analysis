@@ -5,6 +5,8 @@ import pickle
 
 from util import platform
 
+import numpy as np
+
 class Dictioanry:
 
     filename = os.path.join(os.path.curdir, 'out', 'dictionary.pkl')
@@ -17,13 +19,18 @@ class Dictioanry:
         return min_dst + (((value - min_src) * (max_dst - min_dst)) / (max_src - min_src))
 
 
-    def __init__(self, root, vector_range=None, duplicate_weight=0.5, save=False):
+    def __init__(self, root, vector_range=None, duplicate_weight=0.5, save=True):
 
         if os.path.isfile(self.filename):
             with open(self.filename, mode='rb') as file:
                 print('<LOG>: Loading word valences from', self.filename)
 
                 self.fullpaths, self.valences = pickle.load(file)
+
+                for i in range(len(self.fullpaths)):
+                    elements = [values[i] for values in self.valences.values()]
+
+                    print('<LOG>:', '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']', self.fullpaths[i])
 
                 return
 
@@ -38,12 +45,10 @@ class Dictioanry:
 
         self.valences = {}
 
-        tmin, tmax = [float('+inf')] * len(self.fullpaths), [float('-inf')] * len(self.fullpaths)
-
         for index, fullpath in enumerate(self.fullpaths):
 
-            vmin = float('+inf')
-            vmax = float('-inf')
+            vmin, vmax = float('+inf'), float('-inf')
+            tmin, tmax = float('+inf'), float('-inf')
 
             valences = {}
 
@@ -69,11 +74,10 @@ class Dictioanry:
 
                 self.valences[word][index] = self.convert(valence, (vmin, vmax), vector_range) if vector_range else valence
 
-                tmin[index] = min(tmin[index], self.valences[word][index])
-                tmax[index] = max(tmax[index], self.valences[word][index])
+                tmin = min(tmin, self.valences[word][index])
+                tmax = max(tmax, self.valences[word][index])
 
-        for i in range(len(self.fullpaths)):
-            print('<LOG> ', self.fullpaths[i], '{ min:', tmin[i], 'max:', tmax[i], '}')
+            print('<LOG>:', '[' + '{0:.4f}'.format(tmin), ',', '{0:.4f}'.format(tmax) + ']', fullpath)
 
         if save:
             if not os.path.isdir('out'):
@@ -89,18 +93,8 @@ class Dictioanry:
         valences = [[0.0] * len(self.fullpaths)] * len(tweets)
 
         for i, tweet in enumerate(tweets):
-            for token in tweet:
-                for j in range(len(self.fullpaths)):
-                    if token in self.valences:
-                        valences[i][j] += self.valences[token][j] / len(tweet)
-
-        vmin, vmax = float('+inf'), float('-inf')
-
-        for j in range(len(self.fullpaths)):
-            vmin = min(vmin, min(valences[:][j]))
-            vmax = max(vmax, max(valences[:][j]))
-
-        print('{ min:', vmin, 'max:', vmax, '}')
+            for j in range(len(self.fullpaths)):
+                valences[i][j] = np.mean([self.valences[token][j] for token in tweet if token in self.valences])
 
         return valences
 
