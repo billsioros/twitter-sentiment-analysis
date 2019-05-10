@@ -100,9 +100,9 @@ class Vectorizer:
 
         else:
 
-            tweets = [' '.join(tweet) for tweet in tweets]
+            concatenated = [' '.join(tweet) for tweet in tweets]
 
-            vectors = self.underlying.fit_transform(tweets).toarray()
+            vectors = self.underlying.fit_transform(concatenated).toarray()
 
         vmin, vmax = float('+inf'), float('-inf')
 
@@ -117,6 +117,8 @@ class Vectorizer:
             augmented[i] = np.concatenate((vectors[i], valences))
 
         vectors = augmented
+
+        print('<LOG>: The vectors\' coordinates are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
 
         if filename:
             with open(filename, 'wb') as file:
