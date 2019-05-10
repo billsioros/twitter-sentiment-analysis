@@ -28,7 +28,8 @@ class Preprocessor:
         self.tweets = {
             'positive': [],
             'negative': [],
-            'neutral' : []
+            'neutral' : [],
+            'unknown' : []
         }
 
         for label in self.tweets.keys():
