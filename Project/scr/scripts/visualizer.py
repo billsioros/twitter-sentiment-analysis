@@ -27,7 +27,7 @@ class Visualizer:
         elif method == 'frame':
             return self.frame(tokens)
         else:
-            raise ValueError("'" + method + "' does not name any visualization method")
+            raise ValueError("'" + method + "' is not supported")
 
 
     @staticmethod
