@@ -9,13 +9,13 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
 
-import numpy
+import numpy as np
 
 from dictionary import Dictioanry
 
 class Vectorizer:
 
-    vector_size = 200
+    vector_size = 300
 
     bowargs = {
         "max_features": vector_size,
@@ -70,22 +70,14 @@ class Vectorizer:
 
                 return vectors
 
-        return self.process(preprocessor, Dictioanry(dictionary_root), filename if save else None)
+        return self.process(preprocessor, dictionary_root, filename if save else None)
 
 
-    def process(self, preprocessor, dictionary, filename):
+    def process(self, preprocessor, dictionary_root, filename):
 
         tweets = []
         for label in preprocessor.tweets.keys():
             tweets += preprocessor.tweets[label]
-
-        valences = [[0.0] * len(dictionary.fullpaths)] * len(tweets)
-
-        for i, tweet in enumerate(tweets):
-            for token in tweet:
-                for j in range(len(dictionary.fullpaths)):
-                    if token in dictionary.valences:
-                        valences[i][j] += dictionary.valences[token][j] / len(tweet)
 
         if self.method == 'word2vec':
 
@@ -93,30 +85,38 @@ class Vectorizer:
 
             self.underlying.train(sentences=tweets, total_examples=len(tweets), epochs=20)
 
-            vectors = []
+            vectors = [None] * len(tweets)
 
             for i, tweet in enumerate(tweets):
-                vector = []
+                vector = [None] * len(tweet)
 
-                for token in tweet:
+                for j, token in enumerate(tweet):
                     if token in self.underlying.wv:
-                        vector.append(self.underlying.wv[token])
+                        vector[j] = self.underlying.wv[token]
                     else:
-                        vector.append(2.0 * numpy.random.randn(self.vector_size) - 1.0)
+                        vector[j] = 2.0 * np.random.randn(self.vector_size) - 1.0
 
-                vector  = numpy.mean(vector, axis=0)
-                valence = numpy.asarray(valences[i])
-
-                vectors.append(numpy.concatenate((vector, valence)))
+                vectors[i] = np.mean(vector, axis=0)
 
         else:
 
             tweets = [' '.join(tweet) for tweet in tweets]
 
-            vectors = [None] * len(tweets)
+            vectors = self.underlying.fit_transform(tweets).toarray()
 
-            for i, vector in enumerate(self.underlying.fit_transform(tweets).toarray()):
-                vectors[i] = numpy.concatenate((vector, numpy.asarray(valences[i])))
+        vmin, vmax = float('+inf'), float('-inf')
+
+        for vector in vectors:
+            vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+
+        dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+
+        augmented = [None] * len(vectors)
+
+        for i, valences in enumerate(dictionary.per_tweet(tweets)):
+            augmented[i] = np.concatenate((vectors[i], valences))
+
+        vectors = augmented
 
         if filename:
             with open(filename, 'wb') as file:
