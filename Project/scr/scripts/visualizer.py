@@ -13,7 +13,7 @@ class Visualizer:
     def __init__(self, preprocessor):
 
         if not isinstance(preprocessor, Preprocessor):
-            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+            raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
         self.preprocessor = preprocessor
 
@@ -21,7 +21,6 @@ class Visualizer:
     def visualize(self, labels=Preprocessor.valid_labels, method='cloud'):
         
         tokens = []
-
 
         for _, tweets in self.preprocessor.by_label(labels).items():
             for _, tweet in tweets:
