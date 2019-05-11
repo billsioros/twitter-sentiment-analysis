@@ -12,6 +12,7 @@ from gensim.models import Word2Vec
 import numpy as np
 
 from dictionary import Dictioanry
+from preprocessor import Preprocessor
 
 class Vectorizer:
 
@@ -57,7 +58,7 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, preprocessor, dictionary_root='..\\..\\lexica', save=True):
+    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', save=True):
 
         filename = '_'.join([preprocessor.filename, self.method]) + '.pkl'
 
@@ -70,14 +71,15 @@ class Vectorizer:
 
                 return vectors
 
+        if not isinstance(preprocessor, Preprocessor):
+            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+
         return self.process(preprocessor, dictionary_root, filename if save else None)
 
 
     def process(self, preprocessor, dictionary_root, filename):
 
-        tweets = []
-        for label in preprocessor.tweets.keys():
-            tweets += preprocessor.tweets[label]
+        tweets = preprocessor.tweets.values()
 
         if self.method == 'word2vec':
 
@@ -118,7 +120,7 @@ class Vectorizer:
 
         vectors = augmented
 
-        print('<LOG>: The vectors\' coordinates are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+        print('<LOG>: The augmented features\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
 
         if filename:
             with open(filename, 'wb') as file:
