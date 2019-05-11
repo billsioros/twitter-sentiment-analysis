@@ -19,7 +19,7 @@ class Dictioanry:
         return min_dst + (((value - min_src) * (max_dst - min_dst)) / (max_src - min_src))
 
 
-    def __init__(self, root, vector_range=None, duplicate_weight=0.5, save=True):
+    def __init__(self, root, duplicate_weight=0.5, save=True):
 
         if os.path.isfile(self.filename):
             with open(self.filename, mode='rb') as file:
@@ -30,7 +30,7 @@ class Dictioanry:
                 for i in range(len(self.fullpaths)):
                     elements = [values[i] for values in self.valences.values()]
 
-                    print('<LOG>:', 'The normalized valences are in the range', os.path.basename(self.fullpaths[i]).ljust(20), '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']')
+                    print('<LOG>:', 'The valences are in the range', os.path.basename(self.fullpaths[i]).ljust(20), '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']')
 
                 return
 
@@ -45,10 +45,10 @@ class Dictioanry:
 
         self.valences = {}
 
-        for index, fullpath in enumerate(self.fullpaths):
+        self.valence_min = [float('+inf')] * len(self.fullpaths)
+        self.valence_max = [float('-inf')] * len(self.fullpaths)
 
-            vmin, vmax = float('+inf'), float('-inf')
-            tmin, tmax = float('+inf'), float('-inf')
+        for index, fullpath in enumerate(self.fullpaths):
 
             valences = {}
 
@@ -65,19 +65,16 @@ class Dictioanry:
                         else:
                             valences[word] = duplicate_weight * valences[word] + (1.0 - duplicate_weight) * valence
 
-                    vmin = min(vmin, valences[word])
-                    vmax = max(vmax, valences[word])
-
             for word, valence in valences.items():
                 if word not in self.valences:
                     self.valences[word] = [0.0] * len(self.fullpaths)
 
-                self.valences[word][index] = self.convert(valence, (vmin, vmax), vector_range) if vector_range else valence
+                self.valences[word][index] = valence
 
-                tmin = min(tmin, self.valences[word][index])
-                tmax = max(tmax, self.valences[word][index])
+            self.valence_min[index] = np.min(list(self.valences.values()))
+            self.valence_max[index] = np.max(list(self.valences.values()))
 
-            print('<LOG>:', 'The normalized valences are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(tmin), ',', '{0:.4f}'.format(tmax) + ']')
+            print('<LOG>:', 'The valences are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(self.valence_min[index]), ',', '{0:.4f}'.format(self.valence_max[index]) + ']')
 
         if save:
             if not os.path.isdir('out'):
@@ -88,13 +85,13 @@ class Dictioanry:
 
                 pickle.dump((self.fullpaths, self.valences), file)
 
-    def per_tweet(self, tweets):
+    def per_tweet(self, tweets, vector_range):
 
         valences = [[0.0] * len(self.fullpaths)] * len(tweets)
 
         for i, tweet in enumerate(tweets):
             for j in range(len(self.fullpaths)):
-                valences[i][j] = np.mean([self.valences[token][j] for token in tweet if token in self.valences])
+                valences[i][j] = np.mean([self.convert(self.valences[token][j], (self.valence_min[j], self.valence_max[j]), vector_range) for token in tweet if token in self.valences])
 
         return valences
 
