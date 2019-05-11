@@ -12,7 +12,7 @@ class Visualizer:
     def __init__(self, preprocessor):
 
         if not isinstance(preprocessor, Preprocessor):
-            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+            raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
         self.preprocessor = preprocessor
 

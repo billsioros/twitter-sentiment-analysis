@@ -72,7 +72,7 @@ class Vectorizer:
                 return vectors
 
         if not isinstance(preprocessor, Preprocessor):
-            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+            raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
         return self.process(preprocessor, dictionary_root, augmented, filename if save else None)
 
