@@ -67,7 +67,7 @@ class Vectorizer:
             with open(filename, 'rb') as file:
                 vectors = pickle.load(file)
 
-                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
                 return vectors
 
@@ -124,10 +124,12 @@ class Vectorizer:
 
         print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
 
+        vectors = dict(zip(preprocessor.tweets.keys(), vectors))
+
         if filename:
             with open(filename, 'wb') as file:
 
-                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
                 pickle.dump(vectors, file)
 
