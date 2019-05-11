@@ -27,18 +27,9 @@ class Preprocessor:
 
         self.filename = os.path.join(os.path.curdir, 'out', self.filename)
 
-<<<<<<< HEAD
-        self.tweets = {
-            'positive': [],
-            'negative': [],
-            'neutral' : [],
-            'unknown' : []
-        }
-=======
         self.labels = {}
 
         self.tweets = {}
->>>>>>> master
 
         for label in self.valid_labels:
 
