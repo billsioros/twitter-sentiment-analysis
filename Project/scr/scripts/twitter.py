@@ -13,3 +13,6 @@ if __name__ == "__main__":
     for method in ['word-2-vec']:
         vectors = Vectorizer(method).vectorize(preprocessor)
 
+    model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
+    
+    Visualizer(preprocessor).tsne(model)
