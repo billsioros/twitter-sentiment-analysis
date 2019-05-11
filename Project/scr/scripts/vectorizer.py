@@ -58,26 +58,26 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', save=True):
+    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', augmented=False, save=True):
 
-        filename = '_'.join([preprocessor.filename, self.method]) + '.pkl'
+        filename = '_'.join([preprocessor.filename, self.method] + (['augmented'] if augmented else [])) + '.pkl'
 
         if os.path.isfile(filename):
 
             with open(filename, 'rb') as file:
                 vectors = pickle.load(file)
 
-                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
                 return vectors
 
         if not isinstance(preprocessor, Preprocessor):
             raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
 
-        return self.process(preprocessor, dictionary_root, filename if save else None)
+        return self.process(preprocessor, dictionary_root, augmented, filename if save else None)
 
 
-    def process(self, preprocessor, dictionary_root, filename):
+    def process(self, preprocessor, dictionary_root, augmented, filename):
 
         tweets = preprocessor.tweets.values()
 
@@ -111,21 +111,25 @@ class Vectorizer:
         for vector in vectors:
             vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
 
-        dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+        if augmented:
 
-        augmented = [None] * len(vectors)
+            dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
 
-        for i, valences in enumerate(dictionary.per_tweet(tweets)):
-            augmented[i] = np.concatenate((vectors[i], valences))
+            augmented = [None] * len(vectors)
 
-        vectors = augmented
+            for i, valences in enumerate(dictionary.per_tweet(tweets)):
+                augmented[i] = np.concatenate((vectors[i], valences))
 
-        print('<LOG>: The augmented features\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+            vectors = augmented
+
+        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+
+        vectors = dict(zip(preprocessor.tweets.keys(), vectors))
 
         if filename:
             with open(filename, 'wb') as file:
 
-                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
                 pickle.dump(vectors, file)
 

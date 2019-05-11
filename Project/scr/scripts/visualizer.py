@@ -22,11 +22,10 @@ class Visualizer:
         
         tokens = []
 
-        for label in set(labels):
-            if label not in self.preprocessor.tweets.keys():
-                raise ValueError("'" + label + "' is not a valid label")
-            else:
-                tokens += [token for tweet in self.preprocessor.tweets[label] for token in tweet]
+
+        for _, tweets in self.preprocessor.by_label(labels).items():
+            for _, tweet in tweets:
+                tokens += [token for token in tweet]
 
         if method == 'cloud':
             return self.cloud(tokens)
