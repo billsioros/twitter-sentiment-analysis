@@ -103,5 +103,5 @@ class Preprocessor:
             if label not in self.valid_labels:
                 raise ValueError("'" + label + "' is not a valid label")
 
-        return { label: (id, self.tweets[id]) for id, label in self.labels.items() if label in labels }
+        return { label: [(id, self.tweets[id]) for id, label in self.labels.items() if label in labels] }
 
