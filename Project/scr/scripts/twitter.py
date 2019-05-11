@@ -11,5 +11,5 @@ if __name__ == "__main__":
     # visualization = Visualizer(preprocessor).visualize()
 
     for method in ['word-2-vec']:
-        vectors = Vectorizer(method).vectorize(preprocessor)
+        vectors = Vectorizer(method).vectorize(preprocessor, augmented=True)
 
