@@ -11,7 +11,6 @@ from gensim.models import Word2Vec
 
 import numpy as np
 
-from dictionary import Dictioanry
 from preprocessor import Preprocessor
 
 class Vectorizer:
@@ -58,9 +57,12 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', augmented=False, save=True):
+    def vectorize(self, preprocessor, dictionary, save=True):
 
-        filename = '_'.join([preprocessor.filename, self.method] + (['augmented'] if augmented else [])) + '.pkl'
+        filename = '_'.join([(preprocessor.filename if isinstance(preprocessor, Preprocessor) else preprocessor), self.method] + (['augmented'] if dictionary else [])) + '.pkl'
+
+        if isinstance(preprocessor, str) and not os.path.isfile(filename):
+            raise ValueError("'" + filename + "' is not a file")
 
         if os.path.isfile(filename):
 
@@ -74,10 +76,10 @@ class Vectorizer:
         if not isinstance(preprocessor, Preprocessor):
             raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
-        return self.process(preprocessor, dictionary_root, augmented, filename if save else None)
+        return self.process(preprocessor, dictionary, filename if save else None)
 
 
-    def process(self, preprocessor, dictionary_root, augmented, filename):
+    def process(self, preprocessor, dictionary, filename):
 
         tweets = preprocessor.tweets.values()
 
@@ -106,18 +108,16 @@ class Vectorizer:
 
             vectors = self.underlying.fit_transform(concatenated).toarray()
 
-        vmin, vmax = float('+inf'), float('-inf')
+        if dictionary:
 
-        for vector in vectors:
-            vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+            vmin, vmax = float('+inf'), float('-inf')
 
-        if augmented:
-
-            dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+            for vector in vectors:
+                vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
 
             augmented = [None] * len(vectors)
 
-            for i, valences in enumerate(dictionary.per_tweet(tweets)):
+            for i, valences in enumerate(dictionary.per_tweet(tweets, (vmin, vmax))):
                 augmented[i] = np.concatenate((vectors[i], valences))
 
             vectors = augmented
