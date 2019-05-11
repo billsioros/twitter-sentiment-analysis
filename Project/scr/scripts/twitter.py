@@ -3,24 +3,27 @@ from cruncher import Cruncher
 from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
-from classifier import Classifier
+
+import roundRobin as RR
 
 if __name__ == "__main__":
 
-    preprocessor1 = Preprocessor('../test.tsv', Cruncher())
+    preprocessor = Preprocessor('../train.tsv', Cruncher())
 
-    preprocessor2 = Preprocessor('../test2017.tsv', Cruncher())
-
-    # visualization = Visualizer(preprocessor).visualize()
+    #visualization = Visualizer(preprocessor).visualize()
 
     for method in ['word-2-vec']:
-        vectors = Vectorizer(method).vectorize(preprocessor1, augmented=True)
+        knownVectors = Vectorizer(method).vectorize(preprocessor)
+    
+    preprocessor1 = Preprocessor('../test2017.tsv', Cruncher())
 
-        vectors, labels = list(vectors.values()), list(preprocessor1.labels.values())
 
-        classifier = Classifier(vectors, labels)
+    for method in ['word-2-vec']:
+        unknownVectors = Vectorizer(method).vectorize(preprocessor1)
 
-        vectors = Vectorizer(method).vectorize(preprocessor2, augmented=True)
+    RR.roundRobin(preprocessor.labels,knownVectors, unknownVectors)
 
-        print(classifier.predict(list(vectors.values())))
+    model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
+    
+    Visualizer(preprocessor).tsne(model)
 
