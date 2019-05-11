@@ -5,8 +5,6 @@ from visualizer import Visualizer
 from vectorizer import Vectorizer
 import roundRobin as RR
 
-import numpy
-
 if __name__ == "__main__":
 
     preprocessor = Preprocessor('../train.tsv', Cruncher())

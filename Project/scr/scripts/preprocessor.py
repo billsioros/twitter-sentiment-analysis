@@ -11,6 +11,8 @@ from util import platform
 
 class Preprocessor:
 
+    valid_labels = { 'positive', 'negative', 'neutral', 'unknown' }
+
     urlregex = r'''(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))'''
     tagregex = r'''@[^\s]+'''
 
@@ -25,14 +27,20 @@ class Preprocessor:
 
         self.filename = os.path.join(os.path.curdir, 'out', self.filename)
 
+<<<<<<< HEAD
         self.tweets = {
             'positive': [],
             'negative': [],
             'neutral' : [],
             'unknown' : []
         }
+=======
+        self.labels = {}
 
-        for label in self.tweets.keys():
+        self.tweets = {}
+>>>>>>> master
+
+        for label in self.valid_labels:
 
             if not os.path.isfile(self.filename + '_' + label + '.tsv'):
 
@@ -66,27 +74,43 @@ class Preprocessor:
 
                     tokens = [cruncher.crunch(token) for token in tokens if token not in ignore]
 
-                    if tokens[2] in self.tweets.keys():
-                        self.tweets[tokens[2]].append(tokens[3:])
+                    if tokens[2] in self.valid_labels:
+                        self.tweets[tokens[0]] = tokens[3:]
+                        self.labels[tokens[0]] = tokens[2]
                     else:
                         raise ValueError("'" + tokens[2] + "' is not a valid label")
 
                 if save:
-                    for label in self.tweets.keys():
-                        filename = self.filename + '_' + label + '.tsv'
+                    for valid_label in self.valid_labels:
+                        filename = self.filename + '_' + valid_label + '.tsv'
 
-                        print('<LOG>: Saving', str(len(self.tweets[label])), "'" + label +"'", 'tweets to', filename, file=sys.stderr)
+                        tweets = { id: self.tweets[id] for id, label in self.labels.items() if label == valid_label }
+
+                        print('<LOG>: Saving', str(len(tweets)).rjust(5), ("'" + valid_label + "'").ljust(12), 'tweets to', filename, file=sys.stderr)
 
                         with open(filename, 'w', encoding='ascii') as file:
-                            file.write('\n'.join([label + '\t' + ' '.join(tweet) for tweet in self.tweets[label]]))
+                            file.write('\n'.join([id + '\t' + valid_label + '\t' + ' '.join(tweet) for id, tweet in tweets.items()]))
 
                 return
 
-        for label in self.tweets.keys():
-            with open(self.filename + '_' + label + '.tsv', mode='r', encoding='ascii') as file:
-                lines = file.readlines()
+        for valid_label in self.valid_labels:
+            with open(self.filename + '_' + valid_label + '.tsv', mode='r', encoding='ascii') as file:
+                tokenized_lines = [word_tokenize(line) for line in file.readlines()]
 
-                self.tweets[label] = [word_tokenize(line)[1:] for line in lines]
+                for line in tokenized_lines:
+                    self.tweets[line[0]] = line[2:]
+                    self.labels[line[0]] = line[1]
 
-                print('<LOG>: Loaded', str(len(lines)), "'" + label + "'", 'tweets', file=sys.stderr)
+                print('<LOG>: Loaded', str(len(tokenized_lines)).rjust(5), ("'" + valid_label + "'").ljust(12), 'tweets', file=sys.stderr)
+
+
+    def by_label(self, labels):
+
+        labels = set(labels)
+
+        for label in labels:
+            if label not in self.valid_labels:
+                raise ValueError("'" + label + "' is not a valid label")
+
+        return { label: (id, self.tweets[id]) for id, label in self.labels.items() if label in labels }
 
