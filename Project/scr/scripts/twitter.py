@@ -6,9 +6,12 @@ from vectorizer import Vectorizer
 
 if __name__ == "__main__":
 
-   #preprocessor = Preprocessor('../../twitter_data/train2017.tsv', Cruncher())
-    preprocessor = Preprocessor('test.tsv', Cruncher())
-    visualization = Visualizer(preprocessor).visualize(labels = ['positive'],method = 'frame')
+    preprocessor = Preprocessor('../test.tsv', Cruncher())
+
+    # visualization = Visualizer(preprocessor).visualize()
+
+    for method in ['word-2-vec']:
+        vectors = Vectorizer(method).vectorize(preprocessor)
 
     model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
     

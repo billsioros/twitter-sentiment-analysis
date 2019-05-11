@@ -9,12 +9,17 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from gensim.models import Word2Vec
 
-import numpy
+import numpy as np
+
+from dictionary import Dictioanry
+from preprocessor import Preprocessor
 
 class Vectorizer:
 
+    vector_size = 300
+
     bowargs = {
-        "max_features": 200,
+        "max_features": vector_size,
         "stop_words" : 'english',
         "max_df" : 0.5,
         "min_df" : 0.01
@@ -23,12 +28,12 @@ class Vectorizer:
     tfidfargs = {
         "max_df" : 1.0,
         "min_df" : 1,
-        "max_features" : 1000,
+        "max_features" : vector_size,
         "stop_words" : 'english'
     }
 
     w2vargs = {
-        "size" : 100,
+        "size" : vector_size,
         "window" : 5,
         "min_count" : 2,
         "sg" : 1,
@@ -39,76 +44,88 @@ class Vectorizer:
     }
 
 
-    def __init__(self, preprocessor, method='word_embeddings'):
+    def __init__(self, method='word2vec'):
 
-        self.preprocessor = preprocessor
+        self.method = re.sub(r'''_|-|\ ''', '', method)
 
-        self.method = re.sub(r'''-|\ ''', '_', method)
-
-        if self.method == 'word_embeddings':
+        if self.method == 'word2vec':
             self.underlying = Word2Vec(**self.w2vargs)
-        elif self.method == 'bag_of_words':
+        elif self.method == 'bagofwords':
             self.underlying = CountVectorizer(**self.bowargs)
-        elif self.method == 'tf_idf':
+        elif self.method == 'tfidf':
             self.underlying = TfidfVectorizer(**self.tfidfargs)
         else:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, labels=['positive', 'negative', 'neutral'], save=True):
+    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', save=True):
 
-        labels = sorted(set(labels))
-
-        for label in labels:
-            if label not in self.preprocessor.tweets.keys():
-                raise ValueError("'" + label + "' is not a valid label")
-
-        filename = '_'.join([self.preprocessor.filename, self.method] + [label for label in labels]) + '.pkl'
+        filename = '_'.join([preprocessor.filename, self.method]) + '.pkl'
 
         if os.path.isfile(filename):
-            print('<LOG>: Loading vectors from', filename, file=sys.stderr)
 
             with open(filename, 'rb') as file:
-                return pickle.load(file)
+                vectors = pickle.load(file)
 
-        return self.process(labels, filename if save else None)
+                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
+
+                return vectors
+
+        if not isinstance(preprocessor, Preprocessor):
+            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+
+        return self.process(preprocessor, dictionary_root, filename if save else None)
 
 
-    def process(self, labels, filename):
-        
-        tweets = []
+    def process(self, preprocessor, dictionary_root, filename):
 
-        for label in labels:
-            tweets += self.preprocessor.tweets[label]
+        tweets = preprocessor.tweets.values()
 
-        if self.method == 'word_embeddings':
+        if self.method == 'word2vec':
 
             self.underlying.build_vocab(tweets)
 
             self.underlying.train(sentences=tweets, total_examples=len(tweets), epochs=20)
 
-            vectors = []
+            vectors = [None] * len(tweets)
 
-            for tweet in tweets:
-                vector = []
+            for i, tweet in enumerate(tweets):
+                vector = [None] * len(tweet)
 
-                for token in tweet:
+                for j, token in enumerate(tweet):
                     if token in self.underlying.wv:
-                        vector.append(self.underlying.wv[token])
+                        vector[j] = self.underlying.wv[token]
                     else:
-                        vector.append(2 * numpy.random.randn(100) - 1)
+                        vector[j] = 2.0 * np.random.randn(self.vector_size) - 1.0
 
-                vectors.append(numpy.mean(vector))
-                
+                vectors[i] = np.mean(vector, axis=0)
+
         else:
 
-            tweets = [' '.join(tweet) for tweet in tweets]
+            concatenated = [' '.join(tweet) for tweet in tweets]
 
-            vectors = self.underlying.fit_transform(tweets).toarray()
+            vectors = self.underlying.fit_transform(concatenated).toarray()
+
+        vmin, vmax = float('+inf'), float('-inf')
+
+        for vector in vectors:
+            vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+
+        dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+
+        augmented = [None] * len(vectors)
+
+        for i, valences in enumerate(dictionary.per_tweet(tweets)):
+            augmented[i] = np.concatenate((vectors[i], valences))
+
+        vectors = augmented
+
+        print('<LOG>: The augmented features\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
 
         if filename:
             with open(filename, 'wb') as file:
-                print('<LOG>: Saving vectors to', filename, file=sys.stderr)
+
+                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(vectors[0])), 'features each]', file=sys.stderr)
 
                 pickle.dump(vectors, file)
 
