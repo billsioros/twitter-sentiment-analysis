@@ -5,22 +5,24 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from wordcloud import WordCloud, STOPWORDS
 
+from preprocessor import Preprocessor
+
 class Visualizer:
 
     def __init__(self, preprocessor):
 
+        if not isinstance(preprocessor, Preprocessor):
+            raise ValueError("The supplied arguement is not an instance of 'Preprocessor'")
+
         self.preprocessor = preprocessor
 
 
-    def visualize(self, labels=['positive', 'negative', 'neutral'], method='cloud'):
+    def visualize(self, labels=Preprocessor.valid_labels, method='cloud'):
         
         tokens = []
 
-        for label in set(labels):
-            if label not in self.preprocessor.tweets.keys():
-                raise ValueError("'" + label + "' is not a valid label")
-            else:
-                tokens += [token for tweet in self.preprocessor.tweets[label] for token in tweet]
+        for _, (_, tweet) in self.preprocessor.by_label(labels).items():
+            tokens += [token for token in tweet]
         
         if method == 'cloud':
             return self.cloud(tokens)

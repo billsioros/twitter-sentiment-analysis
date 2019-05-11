@@ -30,7 +30,7 @@ class Dictioanry:
                 for i in range(len(self.fullpaths)):
                     elements = [values[i] for values in self.valences.values()]
 
-                    print('<LOG>:', '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']', self.fullpaths[i])
+                    print('<LOG>:', 'The normalized valences are in the range', os.path.basename(self.fullpaths[i]).ljust(20), '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']')
 
                 return
 
@@ -77,7 +77,7 @@ class Dictioanry:
                 tmin = min(tmin, self.valences[word][index])
                 tmax = max(tmax, self.valences[word][index])
 
-            print('<LOG>:', '[' + '{0:.4f}'.format(tmin), ',', '{0:.4f}'.format(tmax) + ']', fullpath)
+            print('<LOG>:', 'The normalized valences are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(tmin), ',', '{0:.4f}'.format(tmax) + ']')
 
         if save:
             if not os.path.isdir('out'):
