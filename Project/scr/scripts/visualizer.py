@@ -21,8 +21,9 @@ class Visualizer:
         
         tokens = []
 
-        for _, (_, tweet) in self.preprocessor.by_label(labels).items():
-            tokens += [token for token in tweet]
+        for _, tweets in self.preprocessor.by_label(labels).items():
+            for _, tweet in tweets:
+                tokens += [token for token in tweet]
         
         if method == 'cloud':
             return self.cloud(tokens)

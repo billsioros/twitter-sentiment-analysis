@@ -60,7 +60,7 @@ class Vectorizer:
 
     def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', augmented=False, save=True):
 
-        filename = '_'.join([preprocessor.filename, self.method] + ['augmented'] if augmented else []) + '.pkl'
+        filename = '_'.join([preprocessor.filename, self.method] + (['augmented'] if augmented else [])) + '.pkl'
 
         if os.path.isfile(filename):
 
