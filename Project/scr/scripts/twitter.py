@@ -49,3 +49,6 @@ if __name__ == "__main__":
 
     RR.roundRobin(preprocessor.labels,knownVectors, unknownVectors)
 
+    model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
+    
+    Visualizer(preprocessor).tsne(model)
