@@ -3,7 +3,7 @@ from cruncher import Cruncher
 from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
-import roundRobin as RB
+import roundRobin as RR
 
 import numpy
 
@@ -21,4 +21,4 @@ if __name__ == "__main__":
     for method in ['word-2-vec']:
         unknownVectors = Vectorizer(method).vectorize(preprocessor1)
 
-    RB.roundRobin(preprocessor.tweets,knownVectors, unknownVectors)
+    RR.roundRobin(preprocessor.tweets,knownVectors, unknownVectors)

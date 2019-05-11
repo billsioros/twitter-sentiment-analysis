@@ -105,7 +105,7 @@ class Vectorizer:
             vectors = self.underlying.fit_transform(concatenated).toarray()
 
         vmin, vmax = float('+inf'), float('-inf')
-
+       
         for vector in vectors:
             vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
 
