@@ -75,7 +75,7 @@ class Visualizer:
             counter +=1
             if counter == 300:
                 break
-
+        
         tsne_model = TSNE(perplexity=40, n_components=2, init='pca', n_iter=5000, random_state=23,)
         new_values = tsne_model.fit_transform(tokens)
 

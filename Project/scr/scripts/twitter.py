@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     RR.roundRobin(preprocessor.labels,knownVectors, unknownVectors)
 
-    model = Vectorizer(preprocessor).vectorize(labels = ['positive'])
+    #model = Vectorizer(preprocessor).vectorize()
     
-    Visualizer(preprocessor).tsne(model)
+    #Visualizer(preprocessor).tsne(model)
 
