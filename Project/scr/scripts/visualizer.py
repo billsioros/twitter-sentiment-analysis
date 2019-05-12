@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.manifold import TSNE
 from wordcloud import WordCloud, STOPWORDS
+import numpy as np
 
 from gensim.models import Word2Vec
 
@@ -13,9 +14,11 @@ from preprocessor import Preprocessor
 from dictionary import Dictioanry
 from vectorizer import Vectorizer
 
+np.random.seed(19680801)
+
 class Visualizer:
 
-    supported_methods = { 'cloud', 'frame', 'tsne' }
+    supported_methods = { 'word_cloud', 'bar_plot', 'tsne', 'heat_map' }
 
     def __init__(self, preprocessor):
 
@@ -25,7 +28,7 @@ class Visualizer:
         self.preprocessor = preprocessor
 
 
-    def visualize(self, labels=Preprocessor.valid_labels, method='cloud', model=None, max_words=300):
+    def visualize(self, labels=Preprocessor.valid_labels, method='word_cloud', dictionary=None, model=None, max_words=300):
 
         tokens = []
 
@@ -33,18 +36,20 @@ class Visualizer:
             for _, tweet in tweets:
                 tokens += [token for token in tweet]
 
-        if method == 'cloud':
-            self.cloud(tokens)
-        elif method == 'frame':
-            self.frame(tokens)
+        if method == 'word_cloud':
+            self.word_cloud(tokens)
+        elif method == 'bar_plot':
+            self.bar_plot(tokens)
         elif method == 'tsne':
             self.tsne(model, max_words)
+        elif method == 'heat_map':
+            self.heat_map(tokens, dictionary)
         else:
             raise ValueError("'" + method + "' is not supported")
 
 
     @staticmethod
-    def frame(tokens):
+    def bar_plot(tokens):
 
         count = Counter(tokens)
 
@@ -54,7 +59,7 @@ class Visualizer:
 
 
     @staticmethod
-    def cloud(tokens):
+    def word_cloud(tokens):
 
         wordcloud = WordCloud(width = 1200, height = 1200,
                 background_color ='white',
@@ -111,19 +116,40 @@ class Visualizer:
         plt.show()
 
 
+    @staticmethod
+    def heat_map(tokens, dictioanry):
+
+        if not isinstance(dictioanry, Dictioanry):
+            raise ValueError("'dictioanry' is not an instance of 'Dictioanry")
+
+        rgb = lambda valence: (255 + Dictioanry.convert(valence, (-1, 1), (0, 255)) + 255) / 3
+
+        x, y, c = [], [], []
+
+        for token in tokens:
+            if token in dictioanry.valences:
+                x.append(np.random.rand())
+                y.append(np.random.rand())
+                c.append(rgb(np.mean(dictioanry.valences[token])))
+
+        plt.scatter(x, y, c=c, alpha=0.8)
+
+        plt.show()
+
+
 if __name__ == "__main__":
-    
+
     preprocessor = Preprocessor(['train.tsv', 'test.tsv'], Cruncher())
 
     dictionary = Dictioanry('..\\..\\lexica')
 
     vectorizer = Vectorizer()
-    
+
     labels, vectors = vectorizer.vectorize(preprocessor, dictionary)
 
     visualizer = Visualizer(preprocessor)
 
     for method in Visualizer.supported_methods:
-        
-        visualizer.visualize(method=method, model=vectorizer.underlying)
+
+        visualizer.visualize(method=method, dictionary=dictionary, model=vectorizer.underlying)
 
