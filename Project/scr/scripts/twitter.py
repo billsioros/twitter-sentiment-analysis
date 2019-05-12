@@ -19,7 +19,7 @@ def visualization(train_filename, cruncher_type='lemmatizer'):
 
     return Visualizer(preprocessor)
 
-def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemmatizer', vectorizer_type='word2vec', metrics = ['f1-score', 'accuracy-score']):
+def evaluation(filenames, dictionary_root='../../lexica', cruncher_type='lemmatizer', vectorizer_type='word2vec', metrics = ['f1-score', 'accuracy-score']):
 
     if not isinstance(filenames, list):
         raise ValueError("'" + filenames + "' is not an instance of 'list'")
@@ -59,20 +59,20 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 
     evaluator = Evaluator()
 
+#
+#    rrb = RoundRobin(train_labels,train_vectors,test_vectors)
+#
+#    predictions = rrb.classify()
+#    
+#    for metric in metrics:
+#
+#        value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
+#
+#        print('<LOG>: The performance of Round Robin according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
+#
 
-    rrb = RoundRobin(train_labels,train_vectors,test_vectors)
 
-    predictions = rrb.classify()
-    
-    for metric in metrics:
-
-        value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
-
-        print('<LOG>: The performance of Round Robin according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
-
-
-
-    for classifing in ['knn', 'svm']:
+    for classifing in ['svm']:
 
         classifier = Classifier(train_vectors, train_labels, classifing)
 
@@ -93,6 +93,6 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 if __name__ == "__main__":
 
     for vectorizer_type in Vectorizer.supported_methods:
-        evaluation(['..\\..\\twitter_data\\train2017.tsv', '..\\..\\twitter_data\\test2017.tsv'], vectorizer_type=vectorizer_type)
+        evaluation(['../../twitter_data/train2017.tsv', '../../twitter_data/test2017.tsv'], vectorizer_type=vectorizer_type)
         # evaluation(['train.tsv', 'test.tsv'], vectorizer_type=vectorizer_type)
 
