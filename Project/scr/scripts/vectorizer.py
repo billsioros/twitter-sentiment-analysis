@@ -13,6 +13,8 @@ import numpy as np
 
 from preprocessor import Preprocessor
 
+from util import platform
+
 class Vectorizer:
 
     vector_size = 300
@@ -59,24 +61,26 @@ class Vectorizer:
 
     def vectorize(self, preprocessor, dictionary, save=True):
 
-        filename = '_'.join([(preprocessor.filename if isinstance(preprocessor, Preprocessor) else preprocessor), self.method] + (['augmented'] if dictionary else [])) + '.pkl'
+        if isinstance(preprocessor, list):
 
-        if isinstance(preprocessor, str) and not os.path.isfile(filename):
-            raise ValueError("'" + filename + "' is not a file")
+            path = platform.filename(preprocessor, ['preprocessed', self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
-        if os.path.isfile(filename):
+            if not os.path.isfile(path):
+                raise ValueError("'" + path + "' is not a file")
 
-            with open(filename, 'rb') as file:
-                vectors = pickle.load(file)
+            with open(path, 'rb') as file:
+                labels, vectors = pickle.load(file)
 
-                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+                print('<LOG>: Loaded', len(vectors), 'vectors from', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
-                return vectors
+                return labels, vectors
+
+        path = '_'.join([preprocessor.path, self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
         if not isinstance(preprocessor, Preprocessor):
             raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
-        return self.process(preprocessor, dictionary, filename if save else None)
+        return self.process(preprocessor, dictionary, path if save else None)
 
 
     def process(self, preprocessor, dictionary, filename):
@@ -122,7 +126,7 @@ class Vectorizer:
 
             vectors = augmented
 
-        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']', file=sys.stderr)
 
         vectors = dict(zip(preprocessor.tweets.keys(), vectors))
 
@@ -131,7 +135,7 @@ class Vectorizer:
 
                 print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
-                pickle.dump(vectors, file)
+                pickle.dump((preprocessor.labels, vectors), file)
 
-        return vectors
+        return preprocessor.labels, vectors
 
