@@ -28,8 +28,8 @@ def roundRobin(labels,labeledVector,unknownVector):
             finalTestSet = appendPrediction(finalTestSet,prediction[1])
 
     finalPrediction = RR_knn(['positive','negative','neutral'],labeledVector,labels,totalTrainSet,totalTestSet, subProblem = False)
-
-    print(finalPrediction)
+    
+    return finalPrediction
 
 def RR_knn(combination,labeledVector,labels,totalTrainSet,totalTestSet, subProblem = False):
     
