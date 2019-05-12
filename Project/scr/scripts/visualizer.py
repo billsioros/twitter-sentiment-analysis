@@ -30,6 +30,8 @@ class Visualizer:
             return self.cloud(tokens)
         elif method == 'frame':
             return self.frame(tokens)
+        elif method == 'tsne':
+            raise ValueError("To visualize with TSNE call the function tsne(model) <Word2Vec model> ")
         else:
             raise ValueError("'" + method + "' is not supported")
 

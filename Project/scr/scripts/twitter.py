@@ -3,12 +3,11 @@ from cruncher import Cruncher
 from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
-
 import roundRobin as RR
 
 if __name__ == "__main__":
 
-    preprocessor = Preprocessor('../train.tsv', Cruncher())
+    preprocessor = Preprocessor('../train2017.tsv', Cruncher())
 
     #visualization = Visualizer(preprocessor).visualize()
 
@@ -21,9 +20,9 @@ if __name__ == "__main__":
     for method in ['word-2-vec']:
         unknownVectors = Vectorizer(method).vectorize(preprocessor1)
 
-    RR.roundRobin(preprocessor.labels,knownVectors, unknownVectors)
+    #RR.roundRobin(preprocessor.labels,knownVectors, unknownVectors)
 
-    #model = Vectorizer(preprocessor).vectorize()
+    #model = Vectorizer(preprocessor).vectorize(preprocessor)
     
-    #Visualizer(preprocessor).tsne(model)
+    Visualizer(preprocessor).visualize(method = 'frame')
 
