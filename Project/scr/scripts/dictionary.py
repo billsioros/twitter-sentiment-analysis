@@ -45,9 +45,6 @@ class Dictioanry:
 
         self.valences = {}
 
-        self.valence_min = [float('+inf')] * len(self.fullpaths)
-        self.valence_max = [float('-inf')] * len(self.fullpaths)
-
         for index, fullpath in enumerate(self.fullpaths):
 
             valences = {}
@@ -71,10 +68,14 @@ class Dictioanry:
 
                 self.valences[word][index] = valence
 
-            self.valence_min[index] = np.min(list(self.valences.values()))
-            self.valence_max[index] = np.max(list(self.valences.values()))
+            valence_min = np.min(list(self.valences.values()))
+            valence_max = np.max(list(self.valences.values()))
 
-            print('<LOG>:', 'The valences are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(self.valence_min[index]), ',', '{0:.4f}'.format(self.valence_max[index]) + ']')
+            print('<LOG>:', 'The valences before normalization are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(valence_min), ',', '{0:.4f}'.format(valence_max) + ']')
+
+            for word in self.valences.keys():
+                for index, value in enumerate(list(self.valences[word])):
+                    self.valences[word][index] = self.convert(value, (valence_min, valence_max), (-1, 1))
 
         if save:
             if not os.path.isdir('out'):
@@ -91,7 +92,7 @@ class Dictioanry:
 
         for i, tweet in enumerate(tweets):
             for j in range(len(self.fullpaths)):
-                valences[i][j] = np.mean([self.convert(self.valences[token][j], (self.valence_min[j], self.valence_max[j]), vector_range) for token in tweet if token in self.valences])
+                valences[i][j] = np.mean([self.convert(self.valences[token][j], (-1, 1), vector_range) for token in tweet if token in self.valences])
 
         return valences
 
