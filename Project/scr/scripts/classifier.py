@@ -1,4 +1,4 @@
-
+import roundRobin as RB
 from sklearn import svm
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -9,7 +9,7 @@ class Classifier:
         if method == 'svm':
             self.underlying = svm.SVC(kernel='linear', C=1, probability=True)
         elif method == 'knn':
-            self.underlying = KNeighborsClassifier(n_neighbors=3)
+            self.underlying = KNeighborsClassifier(n_neighbors=100)
         else:
             raise ValueError("'" + method + "' is not supported")
 

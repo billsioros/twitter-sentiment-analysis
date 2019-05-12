@@ -5,7 +5,7 @@ from sklearn.metrics import f1_score, accuracy_score
 
 class Evaluator:
 
-    def __init__(self, filename='..\\..\\twitter_data\\SemEval2017_task4_subtaskA_test_english_gold.txt'):
+    def __init__(self, filename='../../twitter_data/SemEval2017_task4_subtaskA_test_english_gold.txt'):
 
         with open(filename, mode='r', encoding='ascii', errors='ignore') as file:
             self.results = {}
