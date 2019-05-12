@@ -18,8 +18,8 @@ class RoundRobin:
         finalTestSet = []
         finalTrainSet = []
         for combination in self.comb:
-            print('-----------------------')
             prediction = self.RR_knn(combination,self.labels,self.totalTrainSet,self.totalTestSet, subProblem = True)
+            print('-----------------------')
 
             if len(finalTrainSet) == 0:
                 finalTrainSet = prediction[0]
@@ -27,9 +27,9 @@ class RoundRobin:
             else:
                 finalTrainSet = self.appendPrediction(finalTrainSet,prediction[0])
                 finalTestSet = self.appendPrediction(finalTestSet,prediction[1])
-
-        finalPrediction = self.RR_knn(['positive','negative','neutral'],self.labels,self.totalTrainSet,self.totalTestSet, subProblem = False)
-
+        
+        finalPrediction = self.RR_knn(['positive','negative','neutral'],self.labels,finalTrainSet,finalTestSet, subProblem = False)
+        
         return finalPrediction
 
     def RR_knn(self,combination,labels,totalTrainSet,totalTestSet, subProblem = False):
@@ -50,7 +50,7 @@ class RoundRobin:
             prediction = [knn.predict_proba(totalTrainSet),knn.predict_proba(totalTestSet)]
         else:
             prediction = knn.predict(totalTestSet)
-
+        
         return prediction   
 
     def appendPrediction(self,set, prediction):
