@@ -44,6 +44,8 @@ class Vectorizer:
         "seed" : 34
     }
 
+    supported_methods = { 'word2vec', 'bagofwords', 'tfidf' }
+
 
     def __init__(self, method='word2vec'):
 
