@@ -19,7 +19,6 @@ class RoundRobin:
         finalTrainSet = []
         for combination in self.comb:
             prediction = self.RR_knn(combination,self.labels,self.totalTrainSet,self.totalTestSet, subProblem = True)
-            print('-----------------------')
 
             if len(finalTrainSet) == 0:
                 finalTrainSet = prediction[0]
