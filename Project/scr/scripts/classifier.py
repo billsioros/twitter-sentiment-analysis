@@ -7,9 +7,9 @@ class Classifier:
     def __init__(self, vectors, labels, method='svm'):
 
         if method == 'svm':
-            self.underlying = svm.SVC(kernel='linear', C=1, probability=True)
+            self.underlying = svm.SVC(kernel='sigmoid', gamma='scale', C=1, probability=True)
         elif method == 'knn':
-            self.underlying = KNeighborsClassifier(n_neighbors=3)
+            self.underlying = KNeighborsClassifier(n_neighbors=100)
         else:
             raise ValueError("'" + method + "' is not supported")
 

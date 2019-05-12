@@ -79,5 +79,7 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 
 if __name__ == "__main__":
 
-    evaluation(['..\\..\\twitter_data\\train2017.tsv', '..\\..\\twitter_data\\test2017.tsv'])
-    # evaluation(['train.tsv', 'test.tsv'])
+    for vectorizer_type in Vectorizer.supported_methods:
+        evaluation(['..\\..\\twitter_data\\train2017.tsv', '..\\..\\twitter_data\\test2017.tsv'], vectorizer_type=vectorizer_type)
+        # evaluation(['train.tsv', 'test.tsv'], vectorizer_type=vectorizer_type)
+
