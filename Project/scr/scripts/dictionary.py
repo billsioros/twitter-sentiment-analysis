@@ -100,10 +100,10 @@ class Dictioanry:
 
 if __name__ == "__main__":
 
-    d = Dictioanry('..\\..\\lexica')
+    dictionary = Dictioanry('..\\..\\lexica')
 
-    print("The valence of 'happy' across different dictionaries")
+    print("\n<LOG>: The valence of 'happy' across different dictionaries")
 
-    for fullpath, valence in zip(d.fullpaths, d.valences['happy']):
-        print(fullpath, ':', valence)
+    for fullpath, valence in zip(dictionary.relpaths, dictionary.valences['happy']):
+        print('<LOG>:', fullpath.ljust(max(map(len, dictionary.relpaths))), ':', '{0:+.4f}'.format(valence))
 

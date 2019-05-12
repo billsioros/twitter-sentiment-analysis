@@ -73,7 +73,7 @@ class Vectorizer:
 
                 print('<LOG>: Loaded', len(vectors), 'vectors from', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
-                return labels, vectors
+                return dict(zip(vectors.keys(), labels)), vectors
 
         path = '_'.join([preprocessor.path, self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
@@ -132,7 +132,7 @@ class Vectorizer:
         if path:
             with open(path, 'wb') as file:
 
-                pickle.dump((preprocessor.labels, vectors), file)
+                pickle.dump((list(preprocessor.labels.values()), vectors), file)
 
                 print('<LOG>: Saved', len(vectors), 'vectors to', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
