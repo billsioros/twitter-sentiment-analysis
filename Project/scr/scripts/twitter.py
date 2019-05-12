@@ -66,7 +66,7 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 
             value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
 
-            print('<LOG>: The performance of', classifing, 'according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
+            print('<LOG>: The performance of', "'" + classifing + "'", 'according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
 
 
     end = time.time()
