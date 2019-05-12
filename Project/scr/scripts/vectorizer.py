@@ -11,8 +11,9 @@ from gensim.models import Word2Vec
 
 import numpy as np
 
-from dictionary import Dictioanry
 from preprocessor import Preprocessor
+
+from util import platform
 
 class Vectorizer:
 
@@ -58,26 +59,31 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', augmented=False, save=True):
+    def vectorize(self, preprocessor, dictionary, save=True):
 
-        filename = '_'.join([preprocessor.filename, self.method] + (['augmented'] if augmented else [])) + '.pkl'
+        if isinstance(preprocessor, list):
 
-        if os.path.isfile(filename):
+            path = platform.filename(preprocessor, ['preprocessed', self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
-            with open(filename, 'rb') as file:
-                vectors = pickle.load(file)
+            if not os.path.isfile(path):
+                raise ValueError("'" + path + "' is not a file")
 
-                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+            with open(path, 'rb') as file:
+                labels, vectors = pickle.load(file)
 
-                return vectors
+                print('<LOG>: Loaded', len(vectors), 'vectors from', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+
+                return labels, vectors
+
+        path = '_'.join([preprocessor.path, self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
         if not isinstance(preprocessor, Preprocessor):
             raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
-        return self.process(preprocessor, dictionary_root, augmented, filename if save else None)
+        return self.process(preprocessor, dictionary, path if save else None)
 
 
-    def process(self, preprocessor, dictionary_root, augmented, filename):
+    def process(self, preprocessor, dictionary, filename):
 
         tweets = preprocessor.tweets.values()
 
@@ -106,23 +112,21 @@ class Vectorizer:
 
             vectors = self.underlying.fit_transform(concatenated).toarray()
 
-        vmin, vmax = float('+inf'), float('-inf')
+        if dictionary:
 
-        for vector in vectors:
-            vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+            vmin, vmax = float('+inf'), float('-inf')
 
-        if augmented:
-
-            dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+            for vector in vectors:
+                vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
 
             augmented = [None] * len(vectors)
 
-            for i, valences in enumerate(dictionary.per_tweet(tweets)):
+            for i, valences in enumerate(dictionary.per_tweet(tweets, (vmin, vmax))):
                 augmented[i] = np.concatenate((vectors[i], valences))
 
             vectors = augmented
 
-        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']', file=sys.stderr)
 
         vectors = dict(zip(preprocessor.tweets.keys(), vectors))
 
@@ -131,7 +135,7 @@ class Vectorizer:
 
                 print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
-                pickle.dump(vectors, file)
+                pickle.dump((preprocessor.labels, vectors), file)
 
-        return vectors
+        return preprocessor.labels, vectors
 
