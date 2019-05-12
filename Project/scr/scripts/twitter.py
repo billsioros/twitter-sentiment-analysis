@@ -78,5 +78,5 @@ if __name__ == "__main__":
 
     # '..\\..\\twitter_data\\train2017.tsv'
 
-    evaluation(['train.tsv', 'test.tsv'])
+    evaluation(['..\\..\\twitter_data\\train2017.tsv', '..\\..\\twitter_data\\test2017.tsv'])
 

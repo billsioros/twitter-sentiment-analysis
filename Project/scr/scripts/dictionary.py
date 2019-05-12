@@ -31,7 +31,7 @@ class Dictioanry:
                 for i in range(len(self.relpaths)):
                     elements = [values[i] for values in self.valences.values()]
 
-                    print('<LOG>:', 'The normalized valences of', os.path.basename(self.relpaths[i]).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']', file=sys.stderr)
+                    print('<LOG>:', 'The normalized valences of', os.path.basename(self.relpaths[i]).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:+.4f}'.format(min(elements)), ',', '{0:+.4f}'.format(max(elements)) + ']', file=sys.stderr)
 
                 return
 
@@ -72,7 +72,7 @@ class Dictioanry:
             valence_min = np.min(list(self.valences.values()))
             valence_max = np.max(list(self.valences.values()))
 
-            print('<LOG>:', 'The valences of', os.path.basename(fullpath).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:.4f}'.format(valence_min), ',', '{0:.4f}'.format(valence_max) + ']', file=sys.stderr)
+            print('<LOG>:', 'The valences of', os.path.basename(fullpath).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:+.4f}'.format(valence_min), ',', '{0:+.4f}'.format(valence_max) + ']', file=sys.stderr)
 
             for word in self.valences.keys():
                 for index, value in enumerate(list(self.valences[word])):

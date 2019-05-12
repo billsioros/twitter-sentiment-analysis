@@ -55,6 +55,8 @@ class Preprocessor:
         for filename in filenames:
 
             with open(filename, mode='r', encoding='utf8') as file:
+                print('<LOG>: Processing', ("'" + filename + "'").ljust(max(map(len, filenames)) + 2), file=sys.stderr)
+
                 lines = file.readlines()
 
             ignore = set(stopwords.words('english'))
