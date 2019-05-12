@@ -4,7 +4,7 @@ from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
 
-import roundRobin as RR
+from roundRobin import RoundRobin
 
 from classifier import Classifier
 from evaluator import Evaluator
@@ -58,6 +58,19 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
             train_vectors.append(vectors[id])
 
     evaluator = Evaluator()
+
+
+    rrb = RoundRobin(train_labels,train_vectors,test_vectors)
+
+    predictions = rrb.classify()
+    
+    for metric in metrics:
+
+        value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
+
+        print('<LOG>: The performance of Round Robin according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
+
+
 
     for classifing in ['knn', 'svm']:
 
