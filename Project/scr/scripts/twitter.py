@@ -3,6 +3,9 @@ from cruncher import Cruncher
 from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
+
+import roundRobin as RR
+
 from classifier import Classifier
 from evaluator import Evaluator
 from dictionary import Dictioanry

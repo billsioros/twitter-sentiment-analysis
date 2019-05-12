@@ -1,101 +1,64 @@
 
 import numpy as np
-
+from itertools import combinations 
 from sklearn.neighbors import KNeighborsClassifier
 
 def roundRobin(labels,labeledVector,unknownVector):
 
-    positiveKeys = [key for key in labeledVector.keys() if labels[key] == 'positive']
-    negativeKeys = [key for key in labeledVector.keys() if labels[key] == 'negative']
-    neutralKeys = [key for key in labeledVector.keys() if labels[key] == 'neutral']
+    comb = combinations(['positive','negative','neutral'], 2) 
 
     totalTrainSet = []
     for key in labeledVector.keys():
         totalTrainSet.append(labeledVector[key])
-    
+
     totalTestSet = []
     for key in unknownVector.keys():
         totalTestSet.append(unknownVector[key])
-
-    #positive-negative
-    knn0 = KNeighborsClassifier(n_neighbors=1)
-
-    trainKeys0 = positiveKeys + negativeKeys
-    iris_X0 = []
-    iris_Y0 = []
-
-    for key in trainKeys0:
-        iris_X0.append(labeledVector[key])
     
-    for key in trainKeys0:
-        iris_Y0.append(labels[key])
-
-    knn0.fit(iris_X0,iris_Y0)
-    
-    knn0TrainPrediction = knn0.predict_proba(totalTrainSet)
-    knn0TestPrediction = knn0.predict_proba(totalTestSet)
-
-
-    #positive-neutral
-    knn1 = KNeighborsClassifier(n_neighbors=1)
-
-    trainKeys1 = negativeKeys + neutralKeys
-    iris_X1 = []
-    iris_Y1 = []
-
-    for key in trainKeys1:
-        iris_X1.append(labeledVector[key])
-    
-    for key in trainKeys1:
-        iris_Y1.append(labels[key])
-
-    knn1.fit(iris_X1,iris_Y1)
-
-    knn1TrainPrediction = knn1.predict_proba(totalTrainSet)
-    knn1TestPrediction = knn1.predict_proba(totalTestSet)
-
-
-   #negative-neutral
-    knn2 = KNeighborsClassifier(n_neighbors=1)
-
-    trainKeys2 = positiveKeys + negativeKeys
-    iris_X2 = []
-    iris_Y2 = []
-
-    for key in trainKeys2:
-        iris_X2.append(labeledVector[key])
-    
-    for key in trainKeys2:
-        iris_Y2.append(labels[key])
-
-    knn2.fit(iris_X2,iris_Y2)
-    
-    knn2TrainPrediction = knn2.predict_proba(totalTrainSet)
-    knn2TestPrediction = knn2.predict_proba(totalTestSet)
-
-    print(len(labeledVector.keys()))
-
-   #Final Prediction
-
+    finalTestSet = []
     finalTrainSet = []
-    for i in range(len(labeledVector.keys())):
-        finalTrainSet.append(np.concatenate((knn0TrainPrediction[i] , knn1TrainPrediction[i] , knn2TrainPrediction[i])))
-    print(finalTrainSet)
-    finaltotalTestSet = []
-    for i in range(len(unknownVector.keys())):
-        finaltotalTestSet.append(np.concatenate((knn0TestPrediction[i] , knn1TestPrediction[i] , knn2TestPrediction[i])))
-    print(finaltotalTestSet)
+    for combination in comb:
+        prediction = RR_knn(combination,labeledVector,labels,totalTrainSet,totalTestSet, subProblem = True)
 
+        if len(finalTrainSet) == 0:
+            finalTrainSet = prediction[0]
+            finalTestSet = prediction[1]
+        else:
+            finalTrainSet = appendPrediction(finalTrainSet,prediction[0])
+            finalTestSet = appendPrediction(finalTestSet,prediction[1])
 
-    knn = KNeighborsClassifier(n_neighbors=1)
+    finalPrediction = RR_knn(['positive','negative','neutral'],labeledVector,labels,totalTrainSet,totalTestSet, subProblem = False)
     
-    iris_X = finalTrainSet
-  
+    return finalPrediction
+
+def RR_knn(combination,labeledVector,labels,totalTrainSet,totalTestSet, subProblem = False):
+    
+    trainKeys = []
+    iris_X = []
     iris_Y = []
-    for key in labeledVector.keys():
+    
+    for comb in combination:
+        trainKeys += [key for key in labeledVector.keys() if labels[key] == comb]
+    
+    for key in trainKeys:
+        iris_X.append(labeledVector[key])
+    
+    for key in trainKeys:
         iris_Y.append(labels[key])
+    
+    knn = KNeighborsClassifier(n_neighbors=1)
 
-    knn.fit(iris_X,iris_Y)
+    knn.fit(iris_X,iris_Y) 
 
-    knnPrediction = knn.predict(finaltotalTestSet)
+    if subProblem == True:
+        prediction = [knn.predict_proba(totalTrainSet),knn.predict_proba(totalTestSet)]
+    else:
+        prediction = knn.predict(totalTestSet)
 
+    return prediction   
+
+def appendPrediction(set, prediction):
+            newSet = []
+            for i in range(len(set)):
+                newSet.append(np.concatenate([set[i],prediction[i]]))
+            return newSet
