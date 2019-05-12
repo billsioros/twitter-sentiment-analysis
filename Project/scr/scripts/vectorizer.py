@@ -11,8 +11,9 @@ from gensim.models import Word2Vec
 
 import numpy as np
 
-from dictionary import Dictioanry
 from preprocessor import Preprocessor
+
+from util import platform
 
 class Vectorizer:
 
@@ -58,28 +59,33 @@ class Vectorizer:
             raise ValueError("'" + self.method + "' is not supported")
 
 
-    def vectorize(self, preprocessor=None, dictionary_root='..\\..\\lexica', augmented=False, save=True):
+    def vectorize(self, preprocessor, dictionary, save=True):
 
-        filename = '_'.join([preprocessor.filename, self.method] + (['augmented'] if augmented else [])) + '.pkl'
+        if isinstance(preprocessor, list):
 
-        if os.path.isfile(filename):
+            path = platform.filename(preprocessor, ['preprocessed', self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
-            with open(filename, 'rb') as file:
-                vectors = pickle.load(file)
+            if not os.path.isfile(path):
+                raise ValueError("'" + path + "' is not a file")
 
-                print('<LOG>: Loaded', len(vectors), 'vectors from', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+            with open(path, 'rb') as file:
+                labels, vectors = pickle.load(file)
 
-                return vectors
+                print('<LOG>: Loaded', len(vectors), 'vectors from', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+
+                return labels, vectors
+
+        path = '_'.join([preprocessor.path, self.method] + (['augmented'] if dictionary else [])) + '.pkl'
 
         if not isinstance(preprocessor, Preprocessor):
             raise ValueError("'preprocessor' is not an instance of 'Preprocessor'")
 
-        return self.process(preprocessor, dictionary_root, augmented, filename if save else None)
+        return self.process(preprocessor, dictionary, path if save else None)
 
 
-    def process(self, preprocessor, dictionary_root, augmented, filename):
+    def process(self, preprocessor, dictionary, path):
 
-        tweets = preprocessor.tweets.values()
+        tweets = list(preprocessor.tweets.values())
 
         if self.method == 'word2vec':
 
@@ -106,32 +112,29 @@ class Vectorizer:
 
             vectors = self.underlying.fit_transform(concatenated).toarray()
 
-        vmin, vmax = float('+inf'), float('-inf')
+        if dictionary:
 
-        for vector in vectors:
-            vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+            flattened = list(np.asarray(vectors).flatten())
 
-        if augmented:
-
-            dictionary = Dictioanry(root=dictionary_root, vector_range=(vmin, vmax))
+            vmin, vmax = min(flattened), max(flattened)
 
             augmented = [None] * len(vectors)
 
-            for i, valences in enumerate(dictionary.per_tweet(tweets)):
+            for i, valences in enumerate(dictionary.per_tweet(tweets, (vmin, vmax))):
                 augmented[i] = np.concatenate((vectors[i], valences))
 
             vectors = augmented
 
-        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']')
+        print('<LOG>: The', ('augmented ' if augmented else '') + 'vectors\' values are in the range', '[' + '{0:.4f}'.format(vmin), ',', '{0:.4f}'.format(vmax) + ']', file=sys.stderr)
 
         vectors = dict(zip(preprocessor.tweets.keys(), vectors))
 
-        if filename:
-            with open(filename, 'wb') as file:
+        if path:
+            with open(path, 'wb') as file:
 
-                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+                pickle.dump((preprocessor.labels, vectors), file)
 
-                pickle.dump(vectors, file)
+                print('<LOG>: Saved', len(vectors), 'vectors to', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
-        return vectors
+        return preprocessor.labels, vectors
 

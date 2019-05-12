@@ -6,6 +6,8 @@ class Cruncher:
 
     def __init__(self, method='lemmatizer'):
 
+        self.method = method
+
         if method == 'lemmatizer':
             self.underlying = WordNetLemmatizer()
             self.crunch = self.underlying.lemmatize
