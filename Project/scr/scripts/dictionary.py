@@ -1,5 +1,6 @@
 
 import os
+import sys
 
 import pickle
 
@@ -19,36 +20,33 @@ class Dictioanry:
         return min_dst + (((value - min_src) * (max_dst - min_dst)) / (max_src - min_src))
 
 
-    def __init__(self, root, vector_range=None, duplicate_weight=0.5, save=True):
+    def __init__(self, root, duplicate_weight=0.5, save=True):
 
         if os.path.isfile(self.filename):
             with open(self.filename, mode='rb') as file:
-                print('<LOG>: Loading word valences from', self.filename)
+                print('<LOG>: Loading word valences from', self.filename, file=sys.stderr)
 
-                self.fullpaths, self.valences = pickle.load(file)
+                self.relpaths, self.valences = pickle.load(file)
 
-                for i in range(len(self.fullpaths)):
+                for i in range(len(self.relpaths)):
                     elements = [values[i] for values in self.valences.values()]
 
-                    print('<LOG>:', 'The normalized valences are in the range', os.path.basename(self.fullpaths[i]).ljust(20), '[' + '{0:.4f}'.format(min(elements)), ',', '{0:.4f}'.format(max(elements)) + ']')
+                    print('<LOG>:', 'The normalized valences of', os.path.basename(self.relpaths[i]).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:+.4f}'.format(min(elements)), ',', '{0:+.4f}'.format(max(elements)) + ']', file=sys.stderr)
 
                 return
 
         if duplicate_weight < 0.0 or duplicate_weight > 1.0:
             raise ValueError("'duplicate_weight' must be a value in the range [0.0, 1.0]")
 
-        self.fullpaths = []
+        self.relpaths = []
 
         for directory, _, filenames in os.walk(platform.path(root)):
             for filename in filenames:
-                self.fullpaths.append(os.path.join(root, directory, filename))
+                self.relpaths.append(os.path.join(root, directory, filename))
 
         self.valences = {}
 
-        for index, fullpath in enumerate(self.fullpaths):
-
-            vmin, vmax = float('+inf'), float('-inf')
-            tmin, tmax = float('+inf'), float('-inf')
+        for index, fullpath in enumerate(self.relpaths):
 
             valences = {}
 
@@ -65,36 +63,37 @@ class Dictioanry:
                         else:
                             valences[word] = duplicate_weight * valences[word] + (1.0 - duplicate_weight) * valence
 
-                    vmin = min(vmin, valences[word])
-                    vmax = max(vmax, valences[word])
-
             for word, valence in valences.items():
                 if word not in self.valences:
-                    self.valences[word] = [0.0] * len(self.fullpaths)
+                    self.valences[word] = [0.0] * len(self.relpaths)
 
-                self.valences[word][index] = self.convert(valence, (vmin, vmax), vector_range) if vector_range else valence
+                self.valences[word][index] = valence
 
-                tmin = min(tmin, self.valences[word][index])
-                tmax = max(tmax, self.valences[word][index])
+            valence_min = np.min(list(self.valences.values()))
+            valence_max = np.max(list(self.valences.values()))
 
-            print('<LOG>:', 'The normalized valences are in the range',  os.path.basename(fullpath).ljust(20), '[' + '{0:.4f}'.format(tmin), ',', '{0:.4f}'.format(tmax) + ']')
+            print('<LOG>:', 'The valences of', os.path.basename(fullpath).ljust(max(map(lambda path: len(os.path.basename(path)), self.relpaths))), 'are in the range', '[' + '{0:+.4f}'.format(valence_min), ',', '{0:+.4f}'.format(valence_max) + ']', file=sys.stderr)
+
+            for word in self.valences.keys():
+                for index, value in enumerate(list(self.valences[word])):
+                    self.valences[word][index] = self.convert(value, (valence_min, valence_max), (-1, 1))
 
         if save:
             if not os.path.isdir('out'):
                 os.mkdir('out')
 
             with open(self.filename, mode='wb') as file:
-                print('<LOG>: Saving word valences to', self.filename)
+                pickle.dump((self.relpaths, self.valences), file)
 
-                pickle.dump((self.fullpaths, self.valences), file)
+                print('<LOG>: Saved word valences to', self.filename, file=sys.stderr)
 
-    def per_tweet(self, tweets):
+    def per_tweet(self, tweets, vector_range):
 
-        valences = [[0.0] * len(self.fullpaths)] * len(tweets)
+        valences = [[0.0] * len(self.relpaths)] * len(tweets)
 
         for i, tweet in enumerate(tweets):
-            for j in range(len(self.fullpaths)):
-                valences[i][j] = np.mean([self.valences[token][j] for token in tweet if token in self.valences])
+            for j in range(len(self.relpaths)):
+                valences[i][j] = np.mean([self.convert(self.valences[token][j], (-1, 1), vector_range) for token in tweet if token in self.valences])
 
         return valences
 
