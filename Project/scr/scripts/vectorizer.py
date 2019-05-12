@@ -83,9 +83,9 @@ class Vectorizer:
         return self.process(preprocessor, dictionary, path if save else None)
 
 
-    def process(self, preprocessor, dictionary, filename):
+    def process(self, preprocessor, dictionary, path):
 
-        tweets = preprocessor.tweets.values()
+        tweets = list(preprocessor.tweets.values())
 
         if self.method == 'word2vec':
 
@@ -114,10 +114,9 @@ class Vectorizer:
 
         if dictionary:
 
-            vmin, vmax = float('+inf'), float('-inf')
+            flattened = list(np.asarray(vectors).flatten())
 
-            for vector in vectors:
-                vmin, vmax = min(vmin, min(vector)), max(vmax, max(vector))
+            vmin, vmax = min(flattened), max(flattened)
 
             augmented = [None] * len(vectors)
 
@@ -130,12 +129,12 @@ class Vectorizer:
 
         vectors = dict(zip(preprocessor.tweets.keys(), vectors))
 
-        if filename:
-            with open(filename, 'wb') as file:
-
-                print('<LOG>: Saving', len(vectors), 'vectors to', filename, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
+        if path:
+            with open(path, 'wb') as file:
 
                 pickle.dump((preprocessor.labels, vectors), file)
+
+                print('<LOG>: Saved', len(vectors), 'vectors to', path, '[' + str(len(list(vectors.values())[0])), 'features each]', file=sys.stderr)
 
         return preprocessor.labels, vectors
 

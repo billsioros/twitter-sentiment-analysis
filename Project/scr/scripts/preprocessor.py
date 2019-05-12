@@ -41,10 +41,13 @@ class Preprocessor:
 
                 for line in tokenized_lines:
 
-                    self.tweets[line[0]] = line[2:]
-                    self.labels[line[0]] = line[1]
+                    id, label, tokens = line[0], line[1], line[2:]
 
-                    counts[line[1]] += 1
+                    if tokens:
+                        self.tweets[id] = tokens
+                        self.labels[id] = label
+
+                        counts[label] += 1
 
                 for label, count in counts.items():
                     print('<LOG>: Loaded', str(count).rjust(5), ("'" + label + "'").ljust(max(map(len, self.valid_labels)) + 2), 'tweets from', self.path + '.tsv', file=sys.stderr)
@@ -89,12 +92,17 @@ class Preprocessor:
                 tokens = [cruncher.crunch(token) for token in tokens if token not in ignore]
 
                 if tokens[2] in self.valid_labels:
-                    self.tweets[tokens[0]] = tokens[3:]
-                    self.labels[tokens[0]] = tokens[2]
 
-                    counts[tokens[2]] += 1
+                    id, label, tokens = tokens[0], tokens[2], tokens[3:]
+
+                    if tokens:
+                        self.tweets[id] = tokens
+                        self.labels[id] = label
+
+                        counts[label] += 1
+
                 else:
-                    raise ValueError("'" + tokens[2] + "' is not a valid label")
+                    raise ValueError("'" + label + "' is not a valid label")
 
             for label, count in counts.items():
 
