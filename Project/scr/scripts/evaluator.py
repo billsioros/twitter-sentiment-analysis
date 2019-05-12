@@ -3,6 +3,8 @@ import re
 
 from sklearn.metrics import f1_score, accuracy_score
 
+import numpy as np
+
 class Evaluator:
 
     def __init__(self, filename='../../twitter_data/SemEval2017_task4_subtaskA_test_english_gold.txt'):
@@ -27,7 +29,7 @@ class Evaluator:
         preds = list(unknown.values())
 
         if method == 'f1score':
-            return f1_score(facts, preds, average='weighted')
+            return f1_score(facts, preds, average='weighted', labels=np.unique(preds))
         elif method == 'accuracyscore':
             return accuracy_score(facts, preds, normalize=True)
         else:
