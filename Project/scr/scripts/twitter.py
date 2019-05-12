@@ -3,6 +3,9 @@ from cruncher import Cruncher
 from preprocessor import Preprocessor
 from visualizer import Visualizer
 from vectorizer import Vectorizer
+
+import roundRobin as RR
+
 from classifier import Classifier
 from evaluator import Evaluator
 from dictionary import Dictioanry
@@ -66,7 +69,7 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 
             value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
 
-            print('<LOG>: The performance of', classifing, 'according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
+            print('<LOG>: The performance of', "'" + classifing + "'", 'according to the', ("'" + metric + "'").ljust(max(map(len, metrics)) + 2), "metric is", '{0:.6f}'.format(value))
 
 
     end = time.time()
@@ -76,7 +79,5 @@ def evaluation(filenames, dictionary_root='..\\..\\lexica', cruncher_type='lemma
 
 if __name__ == "__main__":
 
-    # '..\\..\\twitter_data\\train2017.tsv'
-
     evaluation(['..\\..\\twitter_data\\train2017.tsv', '..\\..\\twitter_data\\test2017.tsv'])
-
+    # evaluation(['train.tsv', 'test.tsv'])
