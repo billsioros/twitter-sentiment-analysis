@@ -51,7 +51,7 @@ def evaluation(filenames, dictionary_root='../../lexica', cruncher_type='lemmati
             test_ids.append(id)
             test_labels.append(label)
             test_vectors.append(vectors[id])
-            
+
         else:
             train_ids.append(id)
             train_labels.append(label)
@@ -71,7 +71,7 @@ def evaluation(filenames, dictionary_root='../../lexica', cruncher_type='lemmati
             classifier = RoundRobin(train_labels,train_vectors,test_vectors)
 
             predictions = classifier.classify()
-   
+
         for metric in metrics:
 
             value = evaluator.evaluate(dict(zip(test_ids, predictions)), metric)
@@ -87,6 +87,4 @@ def evaluation(filenames, dictionary_root='../../lexica', cruncher_type='lemmati
 if __name__ == "__main__":
 
     for vectorizer_type in Vectorizer.supported_methods:
-        evaluation(['../../twitter_data/train2017.tsv', '../../twitter_data/test2017.tsv'], vectorizer_type=vectorizer_type)
-        # evaluation(['train.tsv', 'test.tsv'], vectorizer_type=vectorizer_type)
-
+        evaluation(['../../data/train2017.tsv', '../../data/test2017.tsv'], vectorizer_type=vectorizer_type)
