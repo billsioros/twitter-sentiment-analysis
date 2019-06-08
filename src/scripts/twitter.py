@@ -88,3 +88,4 @@ if __name__ == "__main__":
 
     for vectorizer_type in Vectorizer.supported_methods:
         evaluation(['../../data/train2017.tsv', '../../data/test2017.tsv'], vectorizer_type=vectorizer_type)
+
