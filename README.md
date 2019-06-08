@@ -4,6 +4,12 @@
 * Sioros Vasileios (billsioros)
 * Konstantinos Kyriakos (Qwerkykk)
 
+## Notice
+
+We are providing only a sample of the original datasets
+
+---
+
 Firstly, we define some utility functions and globally declare our train_set and test_set filenames
 
 
